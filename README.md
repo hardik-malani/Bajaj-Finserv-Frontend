@@ -1,12 +1,38 @@
-# React + Vite
+# Doctor Listing Page - Campus Assessment
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+*Live Demo:* https://bajaj-finserv-doctor-listing.vercel.app/
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Project Overview
 
-## Expanding the ESLint configuration
+A client-side React application showcasing:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- *Autocomplete Search*: Real-time name suggestions (top 3).
+- *Dynamic Filters*: Single-select mode, multi-select specialties, and sort controls.
+- *URL Sync*: Filters and search terms preserved as query parameters.
+
+All data fetch and state updates occur locally for instant feedback.
+
+## ⚡ Performance & Responsiveness
+
+- *Memoized Computations* (useMemo) to avoid redundant filtering/sorting.
+- *Debounced Input* to limit re-renders during typing.
+- *Bundle Splitting* and *Lazy Loading* for faster initial loads.
+- *Mobile-first Design: Adaptive layout across **sm, **md, **lg* breakpoints.
+- Achieves high Lighthouse scores (Performance ≥ 90, Accessibility ≥ 90).
+
+![LightHouse](https://github.com/user-attachments/assets/fe3dcd23-5740-4152-8357-370e996a5aaa)
+
+## 📋 Features & Functionality
+
+- *Search Bar* (data-testid="autocomplete-input" + suggestion-item):
+  Quickly filters the list by name.
+
+- *Filter Panel* (filter-header-*):
+  - *Mode*: Video vs. Clinic.
+  - *Specialties*: Checkboxes per API data.
+  - *Sort*: Fees ↑ / Experience ↓.
+
+- *Doctor Cards* (doctor-card):
+  Displays name, specialty, experience, and fee with precise data-testid tags.
