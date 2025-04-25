@@ -1,5 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react'
-import { BrowserRouter, useSearchParams, createSearchParams } from 'react-router-dom'
+// src/App.jsx
+import React, { useState, useMemo } from 'react'
+import {
+  BrowserRouter,
+  useSearchParams,
+} from 'react-router-dom'
 import { useDoctors } from './hooks/useDoctors'
 import Autocomplete from './components/Autocomplete/Autocomplete'
 import FilterPanel from './components/Filters/FilterPanel'
@@ -9,28 +13,32 @@ function AppContent() {
   const { doctors, loading } = useDoctors()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const initialSearch = searchParams.get('search') || ''
-  const initialMode = searchParams.get('mode') || ''
-  const initialSort = searchParams.get('sort') || ''
-  const initialSpecs = searchParams.get('specs')
+  // URL-driven state:
+  const search   = searchParams.get('search') || ''
+  const mode     = searchParams.get('mode')   || ''
+  const sortBy   = searchParams.get('sort')   || ''
+  const specs    = searchParams.get('specs')
     ? searchParams.get('specs').split(',')
     : []
 
-  const [searchTerm, setSearchTerm] = useState(initialSearch)
-  const [selectedSearch, setSelectedSearch] = useState(initialSearch)
-  const [mode, setMode] = useState(initialMode)
-  const [sortBy, setSortBy] = useState(initialSort)
-  const [selectedSpecs, setSelectedSpecs] = useState(initialSpecs)
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  // local only for the input box
+  const [searchTerm, setSearchTerm] = useState(search)
 
-  useEffect(() => {
-    const params = {}
-    if (selectedSearch) params.search = selectedSearch
-    if (mode) params.mode = mode
-    if (sortBy) params.sort = sortBy
-    if (selectedSpecs.length) params.specs = selectedSpecs.join(',')
-    setSearchParams(createSearchParams(params), { replace: false })
-  }, [selectedSearch, mode, sortBy, selectedSpecs, setSearchParams])
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  function updateParam(key, value) {
+    const p = new URLSearchParams(searchParams)
+    if (value == null || value === '' || (Array.isArray(value) && !value.length)) {
+      p.delete(key)
+    } else {
+      p.set(key, Array.isArray(value) ? value.join(',') : value)
+    }
+    setSearchParams(p, { replace: false })
+  }
+
+  function onSearchSubmit() {
+    updateParam('search', searchTerm)
+  }
 
   const suggestions = useMemo(() => {
     if (!searchTerm) return []
@@ -40,7 +48,9 @@ function AppContent() {
   }, [searchTerm, doctors])
 
   const specialties = useMemo(() => {
-    return Array.from(new Set(doctors.flatMap(d => d.specialities.map(s => s.name))))
+    return Array.from(
+      new Set(doctors.flatMap(d => d.specialities.map(s => s.name)))
+    )
   }, [doctors])
 
   if (loading) {
@@ -49,62 +59,45 @@ function AppContent() {
 
   return (
     <div className="flex flex-col lg:flex-row max-w-6xl mx-auto p-4 space-y-6 lg:space-y-0 lg:space-x-6">
+      {/* mobile header: input + hamburger */}
       <div className="flex items-center lg:hidden space-x-2">
         <div className="flex-1">
-          <Autocomplete
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedSearch={selectedSearch}
-            setSelectedSearch={setSelectedSearch}
-            suggestions={suggestions}
-          />
+          <form onSubmit={e => { e.preventDefault(); onSearchSubmit() }}>
+            <input
+              data-testid="autocomplete-input"
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search Symptoms, Doctors, Specialists, Clinics"
+              className="w-full h-12 px-4 bg-gray-100 rounded-lg border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </form>
         </div>
-        <button
-          onClick={() => setMobileFiltersOpen(true)}
-          aria-label="Open filters"
-          className="p-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 text-gray-700"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+        <button onClick={() => setMobileOpen(true)} aria-label="Open filters" className="p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
       </div>
 
-      {mobileFiltersOpen && (
+      {mobileOpen && (
         <aside className="fixed inset-y-0 right-0 w-3/4 bg-white z-50 p-4 overflow-y-auto shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Filters</h2>
-            <button
-              onClick={() => setMobileFiltersOpen(false)}
-              aria-label="Close filters"
-              className="p-1"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-gray-700"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+            <button onClick={() => setMobileOpen(false)} aria-label="Close filters" className="p-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-
           <FilterPanel
             mode={mode}
-            onModeChange={setMode}
+            onModeChange={m => updateParam('mode', m)}
             specialties={specialties}
-            selectedSpecs={selectedSpecs}
-            onSpecsChange={setSelectedSpecs}
+            selectedSpecs={specs}
+            onSpecsChange={s => updateParam('specs', s)}
             sortBy={sortBy}
-            onSortChange={setSortBy}
+            onSortChange={s => updateParam('sort', s)}
           />
         </aside>
       )}
@@ -114,17 +107,16 @@ function AppContent() {
           <Autocomplete
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            selectedSearch={selectedSearch}
-            setSelectedSearch={setSelectedSearch}
+            selectedSearch={search}
+            setSelectedSearch={val => updateParam('search', val)}
             suggestions={suggestions}
           />
         </div>
-
         <DoctorList
           doctors={doctors}
-          search={selectedSearch}
+          search={search}
           mode={mode}
-          specs={selectedSpecs}
+          specs={specs}
           sortBy={sortBy}
         />
       </div>
@@ -132,12 +124,12 @@ function AppContent() {
       <div className="hidden lg:block">
         <FilterPanel
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={m => updateParam('mode', m)}
           specialties={specialties}
-          selectedSpecs={selectedSpecs}
-          onSpecsChange={setSelectedSpecs}
+          selectedSpecs={specs}
+          onSpecsChange={s => updateParam('specs', s)}
           sortBy={sortBy}
-          onSortChange={setSortBy}
+          onSortChange={s => updateParam('sort', s)}
         />
       </div>
     </div>
