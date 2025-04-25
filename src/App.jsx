@@ -1,86 +1,67 @@
-import React, { useState } from 'react';
-import { useDoctors } from './hooks/useDoctors';
+import React, { useState, useMemo } from 'react'
+import { useDoctors } from './hooks/useDoctors'
+import Autocomplete from './components/Autocomplete/Autocomplete'
+import FilterPanel from './components/Filters/FilterPanel'
+import DoctorList from './components/DoctorList/DoctorList'
 
 export default function App() {
-  const { doctors, loading } = useDoctors();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSearch, setSelectedSearch] = useState('');
+  const { doctors, loading } = useDoctors()
 
-  const rawMatches = doctors.filter(doc =>
-    doc.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const suggestions = searchTerm ? rawMatches.slice(0, 3) : [];
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedSearch, setSelectedSearch] = useState('')
+  const [mode, setMode] = useState('')
+  const [selectedSpecs, setSelectedSpecs] = useState([])
+  const [sortBy, setSortBy] = useState('')
+
+  const suggestions = useMemo(() => {
+    if (!searchTerm) return []
+    return doctors
+      .filter(d =>
+        d.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .slice(0, 3)
+  }, [searchTerm, doctors])
+
+  const specialties = useMemo(
+    () => Array.from(
+      new Set(doctors.flatMap(d => d.specialities.map(s => s.name)))
+    ),
+    [doctors]
+  )
 
   if (loading) {
-    return <p className="text-center mt-10">Loading doctors…</p>;
+    return <p className="text-center mt-10">Loading doctors…</p>
   }
 
-  const displayedDoctors = selectedSearch
-    ? doctors.filter(doc =>
-        doc.name.toLowerCase().includes(selectedSearch.toLowerCase())
-      )
-    : doctors;
-
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="relative">
-        <input
-          data-testid="autocomplete-input"
-          type="text"
-          value={searchTerm}
-          onChange={e => {
-            setSearchTerm(e.target.value);
-            setSelectedSearch('');
-          }}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              setSelectedSearch(searchTerm);
-            }
-          }}
-          placeholder="Search doctors..."
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+    <div className="flex max-w-6xl mx-auto p-4 space-x-6">
+      <div className="flex-1 space-y-6">
+        <Autocomplete
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedSearch={selectedSearch}
+          setSelectedSearch={setSelectedSearch}
+          suggestions={suggestions}
         />
-        {suggestions.length > 0 && (
-          <ul className="absolute z-10 bg-white w-full mt-1 border rounded">
-            {suggestions.map(s => (
-              <li
-                key={s.id}
-                data-testid="suggestion-item"
-                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  setSearchTerm(s.name);
-                  setSelectedSearch(s.name);
-                }}
-              >
-                {s.name}
-              </li>
-            ))}
-          </ul>
-        )}
+
+        <DoctorList
+          doctors={doctors}
+          search={selectedSearch}
+          mode={mode}
+          specs={selectedSpecs}
+          sortBy={sortBy}
+        />
       </div>
 
-      <div className="space-y-4">
-        {displayedDoctors.length > 0 ? (
-          displayedDoctors.map(doc => (
-            <div
-              key={doc.id}
-              data-testid="doctor-card"
-              className="p-4 bg-white rounded shadow"
-            >
-              <h2 data-testid="doctor-name" className="text-xl font-semibold">
-                {doc.name}
-              </h2>
-              <p data-testid="doctor-specialty">
-                {doc.specialities.map(s => s.name).join(', ')}
-              </p>
-              <p data-testid="doctor-experience">{doc.experience}</p>
-              <p data-testid="doctor-fee">{doc.fees}</p>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-500">No doctors found.</p>
-        )}
-      </div>
+      <FilterPanel
+        mode={mode}
+        onModeChange={setMode}
+        specialties={specialties}
+        selectedSpecs={selectedSpecs}
+        onSpecsChange={setSelectedSpecs}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
     </div>
-  );
+  )
 }
