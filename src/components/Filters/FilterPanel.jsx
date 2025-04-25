@@ -9,20 +9,18 @@ export default function FilterPanel({
   sortBy, onSortChange
 }) {
   return (
-    <aside className="w-64 p-4 bg-white rounded shadow space-y-6">
-      <ConsultationFilter
-        mode={mode}
-        onChange={onModeChange}
-      />
-      <SpecialtyFilter
-        specialties={specialties}
-        selected={selectedSpecs}
-        onChange={onSpecsChange}
-      />
-      <SortFilter
-        sortBy={sortBy}
-        onChange={onSortChange}
-      />
+    <aside className="w-64 space-y-6 sticky top-4 self-start">
+      <div className="bg-white p-4 rounded-xl shadow space-y-4">
+        <ConsultationFilter mode={mode} onChange={onModeChange} />
+        <SortFilter sortBy={sortBy} onChange={onSortChange} />
+      </div>
+      <div className="bg-white p-4 rounded-xl shadow">
+        <SpecialtyFilter
+          specialties={specialties}
+          selected={selectedSpecs}
+          onChange={onSpecsChange}
+        />
+      </div>
     </aside>
   );
 }

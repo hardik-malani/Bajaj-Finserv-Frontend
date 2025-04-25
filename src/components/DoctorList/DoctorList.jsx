@@ -44,14 +44,14 @@ export default function DoctorList({
   }, [doctors, search, mode, specs, sortBy])
 
   if (displayed.length === 0) {
-    return <p className="text-center text-gray-500">No doctors found.</p>
+    return <p className="text-center text-gray-500 mt-6">No doctors found.</p>;
   }
-
+  
   return (
     <div className="space-y-4">
       {displayed.map(doc => (
         <DoctorCard key={doc.id} doctor={doc} />
       ))}
     </div>
-  )
+  );
 }
